@@ -57,8 +57,6 @@ console.log(pagination.pages);
 
 ## API
 
-Besides the methods provided by default, I've added 2 new methods:
-
 * **createPageHandles**
 * **convertListToPages**
 

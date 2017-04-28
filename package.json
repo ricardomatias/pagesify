@@ -1,0 +1,22 @@
+{
+  "name": "pagesify",
+  "version": "0.0.1",
+  "description": "Simple pagination algorithm",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test.js"
+  },
+  "author": {
+    "name": "Ricardo Matias",
+    "url": "https://github.com/ricardomatias"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ricardomatias/pagesify"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.3.0"
+  }
+}
