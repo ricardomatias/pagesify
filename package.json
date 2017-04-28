@@ -1,6 +1,6 @@
 {
   "name": "pagesify",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple pagination algorithm",
   "main": "index.js",
   "scripts": {
