@@ -69,14 +69,14 @@ Besides the methods provided by default, I've added 2 new methods:
 
 Returns an array of **handles**
 
----
-
-#### convertListToPages (list, itemsPerPage)
+### convertListToPages (list, itemsPerPage)
 
 **list**: object<array> starting from 1  
 **itemsPerPage**: number
 
 Returns an object<array> of **pages**
+
+---
 
 ## License
 
