@@ -34,7 +34,9 @@ var items = [
   'nicolas jaar',
   'boards of canada',
   'james blake',
-  'nicolas jaar'
+  'nicolas jaar',
+  'apparat',
+  'clark'
 ];
 
 var currentPage = 3;
@@ -42,23 +44,26 @@ var currentPage = 3;
 var pagination = pagesify.paginate(items, currentPage);
 
 console.log(pagination.handles);
-// { handles: [ 'prev', 1, 2, 3, '..', 4, 'next' ] }
+// { handles: [ 'prev', 1, 2, 3, '..', 5, 'next' ] }
 
 console.log(pagination.pages);
 /* pages:
  { '1': [ 'radiohead', 'jamie woon', 'actress' ],
    '2': [ 'joy division', 'burial', 'sampha' ],
    '3': [ 'the xx', 'nicolas jaar', 'boards of canada' ],
-   '4': [ 'james blake', 'nicolas jaar' ],
-   length: 4 } }
+   '4': [ 'james blake', 'nicolas jaar', 'apparat ],
+   '5': [ 'clark' ],
+   length: 5 } }
 */
 
 ```
 
 ## API
 
-* **createPageHandles**
-* **convertListToPages**
+### OPTIONS
+* interval(default=3) - how many pages shown in between the current page 
+* placeholder(default='..') - which symbol represents the interval of pages that isn't shown
+* itemsPerPage(default=2) - how many items are there in each page 
 
 ### createPageHandles (pages, currentPage)
 
