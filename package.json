@@ -1,22 +1,40 @@
 {
-  "name": "pagesify",
-  "version": "1.0.1",
-  "description": "Simple pagination algorithm",
-  "main": "index.js",
-  "scripts": {
-    "test": "mocha test.js"
-  },
-  "author": {
-    "name": "Ricardo Matias",
-    "url": "https://github.com/ricardomatias"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ricardomatias/pagesify"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^3.3.0"
-  }
+    "name": "pagesify",
+    "version": "1.0.1",
+    "description": "Simple pagination algorithm",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc && node build.js",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage",
+        "prepublishOnly": "npm run build"
+    },
+    "author": {
+        "name": "Ricardo Matias",
+        "url": "https://github.com/ricardomatias"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ricardomatias/pagesify"
+    },
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^22.10.1",
+        "esbuild": "^0.24.0",
+        "typescript": "^5.7.2",
+        "vitest": "^2.1.8"
+    }
 }
