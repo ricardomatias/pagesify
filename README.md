@@ -15,13 +15,7 @@ $ npm install --save pagesify
 ## Usage
 
 ```js
-import Pagesify from 'pagesify';
-
-const pagesify = new Pagesify({
-    interval: 3,
-    placeholder: '..',
-    itemsPerPage: 3,
-});
+import { paginate } from 'pagesify';
 
 const items = [
     'radiohead',
@@ -41,20 +35,22 @@ const items = [
 
 const currentPage = 3;
 
-const pagination = pagesify.paginate(items, currentPage);
+const pagination = paginate(items, currentPage, {
+    placeholder: '..',
+    itemsPerPage: 3,
+});
 
 console.log(pagination.handles);
-// { handles: [ 'prev', 1, 2, 3, '..', 5, 'next' ] }
+// ['prev', 1, 2, 3, 4, 5, 'next']
 
 console.log(pagination.pages);
-/* pages:
- { '1': [ 'radiohead', 'jamie woon', 'actress' ],
-   '2': [ 'joy division', 'burial', 'sampha' ],
-   '3': [ 'the xx', 'nicolas jaar', 'boards of canada' ],
-   '4': [ 'james blake', 'nicolas jaar', 'apparat ],
-   '5': [ 'clark' ],
-   length: 5 } }
-*/
+// [
+//   ['radiohead', 'jamie woon', 'actress'],
+//   ['joy division', 'burial', 'sampha'],
+//   ['the xx', 'nicolas jaar', 'boards of canada'],
+//   ['james blake', 'nicolas jaar', 'apparat'],
+//   ['clark']
+// ]
 ```
 
 ## TypeScript
@@ -62,39 +58,60 @@ console.log(pagination.pages);
 This library is written in TypeScript and includes type definitions. The interfaces are automatically available when importing:
 
 ```typescript
-import Pagesify, { PagesifyOptions, PaginationResult, Pages } from 'pagesify';
+import { paginate, PagesifyOptions, PaginationResult } from 'pagesify';
 
 const options: PagesifyOptions = {
-    interval: 3,
     placeholder: '..',
     itemsPerPage: 3,
+    stableHandles: false,
 };
 
-const pagesify = new Pagesify(options);
-const result: PaginationResult = pagesify.paginate(items, 3);
+const items = ['item1', 'item2', 'item3'];
+const result: PaginationResult<string> = paginate(items, 1, options);
 ```
 
 ## API
 
+### paginate(items, currentPage, options?)
+
+Main function to paginate a list of items and generate navigation handles.
+
+**items**: `T[]` - Array of items to paginate  
+**currentPage**: `number` - Current page number (1-based)  
+**options**: `PagesifyOptions` (optional) - Configuration options
+
+Returns: `PaginationResult<T>` containing:
+
+-   `handles`: Array of page numbers, 'prev', 'next', and placeholder strings
+-   `pages`: 2D array of paginated items
+
 ### OPTIONS
 
--   interval(default=3) - how many pages shown in between the current page
--   placeholder(default='..') - which symbol represents the interval of pages that isn't shown
--   itemsPerPage(default=2) - how many items are there in each page
+-   **placeholder** (default='..')  
+    Symbol representing collapsed page ranges
+-   **itemsPerPage** (default=2)  
+    Number of items per page
+-   **stableHandles** (default=false)  
+    If true, 'prev' and 'next' handles are always shown even on first/last page
 
-### createPageHandles (pages, currentPage)
+### createPageHandles(currentPage, pageCount, options?)
 
-**pages**: object<array> starting from 1  
-**currentPage**: number
+Generates navigation handles for pagination UI.
 
-Returns an array of **handles**
+**currentPage**: `number` - Current page (1-based)  
+**pageCount**: `number` - Total number of pages  
+**options**: `PagesifyOptions` (optional)
 
-### convertListToPages (list, itemsPerPage)
+Returns: Array of handles `(string | number)[]`
 
-**list**: object<array> starting from 1  
-**itemsPerPage**: number
+### convertListToPages(list, itemsPerPage)
 
-Returns an object<array> of **pages**
+Splits a flat list into pages.
+
+**list**: `T[]` - Array of items  
+**itemsPerPage**: `number` - Items per page
+
+Returns: `T[][]` - Array of pages
 
 ---
 

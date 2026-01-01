@@ -1,23 +1,16 @@
 export interface PagesifyOptions {
-    interval?: number;
     placeholder?: string;
     itemsPerPage?: number;
+    stableHandles?: boolean;
 }
-export interface Pages {
-    [key: number]: any[];
-    length: number;
-}
-export interface PaginationResult {
+export interface PaginationResult<T> {
     handles: (string | number)[];
-    pages: Pages;
+    pages: T[][];
 }
-export default class Pagesify {
-    private interval;
-    private placeholder;
-    private itemsPerPage;
-    constructor(options?: PagesifyOptions);
-    paginate(items: any[] | Record<string, any>, currentPage: number): PaginationResult;
-    createPageHandles(pages: Pages, currentPage: number): (string | number)[];
-    convertListToPages(list: any[] | Record<string, any>, itemsPerPage: number): Pages;
-}
+/**
+ * The current page is always surrounded by the next and following page numbers UNLESS they are the first or last page.
+ */
+export declare function paginate<T>(items: T[], currentPage: number, options?: PagesifyOptions): PaginationResult<T>;
+export declare function createPageHandles(currentPage: number, pageCount: number, options?: PagesifyOptions): (string | number)[];
+export declare function convertListToPages<T>(list: T[], itemsPerPage: number): T[][];
 //# sourceMappingURL=index.d.ts.map

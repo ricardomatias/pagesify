@@ -1,59 +1,147 @@
 import { describe, it, expect } from 'vitest';
-import Pagesify from '../src/index.js';
+import { convertListToPages, createPageHandles, paginate } from '../src/index.js';
+
+function createList(pages: number, itemsPerPage: number = 2) {
+    const length = pages * itemsPerPage;
+    return Array.from({ length }, (_, index) => index + 1);
+}
 
 describe('pagesify', () => {
     describe('general', () => {
-        let pagesify = new Pagesify();
+        it('should test basic', () => {
+            const list = createList(1);
 
-        it('should create simple pagination', () => {
-            const list = {
-                1: 1,
-                2: 2,
-                3: 3,
-                4: 4,
-                5: 5,
-                6: 6,
-            };
+            const result = paginate(list, 1);
 
-            const result = pagesify.paginate(list, 1);
+            expect(result.handles).toEqual([1]);
+        });
+        it("should test scenario: 1 -> [ 1, 2, 3, 'next' ]", () => {
+            // * f.ex: 1 -> [ 1, 2, 3, 'next' ]
+            const list = createList(3);
+
+            const result = paginate(list, 1);
 
             expect(result.handles).toEqual([1, 2, 3, 'next']);
         });
 
-        it('should create complex pagination', () => {
-            pagesify = new Pagesify({
-                interval: 4,
-                placeholder: '?!',
-                itemsPerPage: 2,
-            });
-
-            const list = {
-                1: 1,
-                2: 2,
-                3: 3,
-                4: 4,
-                5: 5,
-                6: 6,
-                7: 7,
-                8: 8,
-                9: 9,
-                10: 10,
-                11: 11,
-                12: 12,
-                13: 13,
+        it("should test scenario: 1 or 2 or 3 -> [ 'prev', 1, 2, 3, 'next']", () => {
+            // * f.ex: 1 or 2 or 3 -> [ 'prev', 1, 2, 3, 'next']
+            const options = {
+                stableHandles: true,
             };
 
-            const result = pagesify.paginate(list, 5);
+            const list = createList(3);
 
-            expect(result.handles).toEqual(['prev', 1, '?!', 4, 5, 6, 7, 'next']);
+            const test1 = paginate(list, 1, options).handles;
+            const test2 = paginate(list, 2, options).handles;
+            const test3 = paginate(list, 3, options).handles;
+
+            expect(test1).toEqual(['prev', 1, 2, 3, 'next']);
+            expect(test2).toEqual(['prev', 1, 2, 3, 'next']);
+            expect(test3).toEqual(['prev', 1, 2, 3, 'next']);
+        });
+
+        it("should test scenario: 1 or 2 -> [ 'prev', 1, 2, 3, '..', 8, 'next' ]", () => {
+            // * f.ex: 1 or 2 -> [ 'prev', 1, 2, 3, 4, '..', 8, 'next' ]
+            const options = {
+                stableHandles: true,
+            };
+
+            const list = createList(8);
+
+            const test1 = paginate(list, 1, options).handles;
+            const test2 = paginate(list, 2, options).handles;
+
+            expect(test1).toEqual(['prev', 1, 2, 3, '..', 8, 'next']);
+            expect(test2).toEqual(['prev', 1, 2, 3, '..', 8, 'next']);
+        });
+
+        it("should test scenario: 3 -> [ 'prev', 1, 2, 3, 4, '..', 8, 'next' ]", () => {
+            // * f.ex: 3 -> [ 'prev', 1, 2, 3, 4, '..', 8, 'next' ]
+            const options = {
+                stableHandles: true,
+            };
+
+            const list = createList(8);
+
+            const result = paginate(list, 3, options);
+
+            expect(result.handles).toEqual(['prev', 1, 2, 3, '..', 8, 'next']);
+        });
+
+        it("should test scenario: 7 -> [ 'prev', 1, '..', 6, 7, 8, '..', '12', 'next' ]", () => {
+            // * f.ex: 7 -> [ 'prev', 1, '..', 6, 7, 8, '..', '12', 'next' ]
+            const options = {
+                stableHandles: true,
+            };
+
+            const list = createList(12);
+
+            const result = paginate(list, 7, options);
+
+            expect(result.handles).toEqual(['prev', 1, '..', 6, 7, 8, '..', 12, 'next']);
+        });
+
+        it("should test scenario: 6 -> [ 'prev', 1, '..', 5, 6, 7, 8, 'next' ]", () => {
+            // * f.ex: 6 -> [ 'prev', 1, '..', 5, 6, 7, 8, 'next' ]
+            const options = {
+                stableHandles: true,
+            };
+
+            const list = createList(8);
+
+            const result = paginate(list, 6, options);
+
+            expect(result.handles).toEqual(['prev', 1, '..', 6, 7, 8, 'next']);
+        });
+
+        it("should test scenario: 7 or 8 [ 'prev', 1, '..', 6, 7, 8, 'next' ]", () => {
+            // * f.ex: 7 or 8 [ 'prev', 1, '..', 6, 7, 8, 'next' ]
+            const options = {
+                stableHandles: true,
+            };
+
+            const list = createList(8);
+
+            const test1 = paginate(list, 7, options);
+            const test2 = paginate(list, 8, options);
+
+            expect(test1.handles).toEqual(['prev', 1, '..', 6, 7, 8, 'next']);
+            expect(test2.handles).toEqual(['prev', 1, '..', 6, 7, 8, 'next']);
+        });
+
+        it('should create complex pagination', () => {
+            const options = {
+                placeholder: '?!',
+                itemsPerPage: 2,
+            };
+
+            const list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
+            const result = paginate(list, 5, options);
+
+            expect(result.handles).toEqual(['prev', 1, '?!', 5, 6, 7, 'next']);
+        });
+
+        it('should create complex pagination without placeholder', () => {
+            const options = {
+                placeholder: '?!',
+                itemsPerPage: 2,
+                stableHandles: true,
+            };
+
+            const list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
+            const result = paginate(list, 3, options);
+
+            expect(result.handles).toEqual(['prev', 1, 2, 3, '?!', 7, 'next']);
         });
 
         it('should create complex pagination out of a items array', () => {
-            const pagesify = new Pagesify({
-                interval: 3,
+            const options = {
                 placeholder: '..',
                 itemsPerPage: 3,
-            });
+            };
 
             const items = [
                 'radiohead',
@@ -69,148 +157,81 @@ describe('pagesify', () => {
                 'nicolas jaar',
             ];
 
-            const result = pagesify.paginate(items, 3);
+            const result = paginate(items, 3, options);
 
-            expect(result.handles).toEqual(['prev', 1, 2, 3, '..', 4, 'next']);
-            expect(result.pages).toEqual({
-                '1': ['radiohead', 'jamie woon', 'actress'],
-                '2': ['joy division', 'burial', 'sampha'],
-                '3': ['the xx', 'nicolas jaar', 'boards of canada'],
-                '4': ['james blake', 'nicolas jaar'],
-                length: 4,
-            });
+            expect(result.handles).toEqual(['prev', 1, 2, 3, 4, 'next']);
+            expect(result.pages).toEqual([
+                ['radiohead', 'jamie woon', 'actress'],
+                ['joy division', 'burial', 'sampha'],
+                ['the xx', 'nicolas jaar', 'boards of canada'],
+                ['james blake', 'nicolas jaar'],
+            ]);
         });
     });
 
     describe('#createPageHandles', () => {
-        const pagesify = new Pagesify();
+        const options = {
+            stableHandles: false,
+        };
 
         it('first page selected', () => {
-            const pages = {
-                1: [1],
-                2: [2],
-                3: [3],
-                length: 3,
-            };
-
             const result = [1, 2, 3, 'next'];
 
-            expect(pagesify.createPageHandles(pages, 1)).toEqual(result);
+            expect(createPageHandles(1, 3, options)).toEqual(result);
         });
 
         it('last page selected', () => {
-            const pages = {
-                1: [1],
-                2: [2],
-                3: [3],
-                length: 3,
-            };
-
             const result = ['prev', 1, 2, 3];
 
-            expect(pagesify.createPageHandles(pages, 3)).toEqual(result);
+            expect(createPageHandles(3, 3, options)).toEqual(result);
         });
 
         it('second page selected', () => {
-            const pages = {
-                1: [1],
-                2: [2],
-                3: [3],
-                length: 3,
-            };
-
             const result = ['prev', 1, 2, 3, 'next'];
 
-            expect(pagesify.createPageHandles(pages, 2)).toEqual(result);
+            expect(createPageHandles(2, 3, options)).toEqual(result);
         });
 
         it('big list', () => {
-            const pages = {
-                1: [1],
-                2: [2],
-                3: [3],
-                4: [4],
-                5: [5],
-                6: [6],
-                7: [7],
-                8: [8],
-                length: 8,
-            };
-
             const result = ['prev', 1, 2, 3, '..', 8, 'next'];
 
-            expect(pagesify.createPageHandles(pages, 3)).toEqual(result);
+            expect(createPageHandles(3, 8, options)).toEqual(result);
         });
 
         it('big list, higher interval, middle selection', () => {
-            const pages = {
-                1: [1],
-                2: [2],
-                3: [3],
-                4: [4],
-                5: [5],
-                6: [6],
-                7: [7],
-                8: [8],
-                length: 8,
-            };
+            const pages = [[1], [2], [3], [4], [5], [6], [7], [8]];
 
             const result = ['prev', 1, '..', 3, 4, 5, '..', 8, 'next'];
 
-            expect(pagesify.createPageHandles(pages, 4)).toEqual(result);
+            expect(createPageHandles(4, pages.length, options)).toEqual(result);
         });
 
         it('big list, higher interval, last part selection', () => {
-            const pages = {
-                1: [1],
-                2: [2],
-                3: [3],
-                4: [4],
-                5: [5],
-                6: [6],
-                7: [7],
-                8: [8],
-                length: 8,
-            };
-
             const result = ['prev', 1, '..', 6, 7, 8, 'next'];
 
-            expect(pagesify.createPageHandles(pages, 6)).toEqual(result);
+            expect(createPageHandles(6, 8, options)).toEqual(result);
         });
     });
 
     describe('#convertListToPages', () => {
-        const pagesify = new Pagesify();
-
         it('even number', () => {
-            const list = {
-                1: 1,
-                2: 2,
-                3: 3,
-                4: 4,
-                5: 5,
-                6: 6,
-            };
+            const list = [1, 2, 3, 4, 5, 6];
 
-            const result = { 1: [1, 2], 2: [3, 4], 3: [5, 6], length: 3 };
+            const result = [
+                [1, 2],
+                [3, 4],
+                [5, 6],
+            ];
 
-            expect(pagesify.convertListToPages(list, 2)).toEqual(result);
+            expect(convertListToPages(list, 2)).toEqual(result);
         });
 
         it('odd number', () => {
-            const list = {
-                1: 1,
-                2: 2,
-                3: 3,
-                4: 4,
-                5: 5,
-                6: 6,
-                7: 7,
-            };
+            const list = [1, 2, 3, 4, 5, 6, 7];
 
-            const result = { 1: [1, 2], 2: [3, 4], 3: [5, 6], 4: [7], length: 4 };
+            const result = [[1, 2], [3, 4], [5, 6], [7]];
 
-            expect(pagesify.convertListToPages(list, 2)).toEqual(result);
+            expect(convertListToPages(list, 2)).toEqual(result);
         });
     });
 });

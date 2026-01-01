@@ -1,103 +1,82 @@
-const DEFAULT_INTERVAL = 3;
 const DEFAULT_PLACEHOLDER = '..';
 const DEFAULT_ITEMS_PER_PAGE = 2;
-export default class Pagesify {
-    interval;
-    placeholder;
-    itemsPerPage;
-    constructor(options = {}) {
-        this.interval = options.interval || DEFAULT_INTERVAL;
-        this.placeholder = options.placeholder || DEFAULT_PLACEHOLDER;
-        this.itemsPerPage = options.itemsPerPage || DEFAULT_ITEMS_PER_PAGE;
+/**
+ * The current page is always surrounded by the next and following page numbers UNLESS they are the first or last page.
+ */
+export function paginate(items, currentPage, options = {}) {
+    const itemsPerPage = options.itemsPerPage || DEFAULT_ITEMS_PER_PAGE;
+    const pages = convertListToPages(items, itemsPerPage);
+    const handles = createPageHandles(pages.length, currentPage, options);
+    return {
+        handles,
+        pages,
+    };
+}
+export function createPageHandles(currentPage, pageCount, options = {}) {
+    const placeholder = options.placeholder || DEFAULT_PLACEHOLDER;
+    const stableHandles = options.stableHandles || false;
+    let context = [currentPage - 1, currentPage, currentPage + 1];
+    const hasEarlyPlaceholder = context[0] > 2;
+    const hasLatePlaceholder = context[2] < pageCount - 1;
+    const isEarlyEdge = hasLatePlaceholder && currentPage === 3;
+    const isLateEdge = hasEarlyPlaceholder && currentPage === pageCount - 2;
+    context = context.filter((n) => n > 1 && n < pageCount);
+    let start = [];
+    let middle = [];
+    let end = [];
+    // START: nav handle
+    if (currentPage > 1 || stableHandles) {
+        start.push('prev');
     }
-    paginate(items, currentPage) {
-        const pages = this.convertListToPages(items, this.itemsPerPage);
-        const handles = this.createPageHandles(pages, currentPage);
-        return {
-            handles,
-            pages,
-        };
+    start.push(1);
+    // add placeholder if context[0] != 2
+    if (hasEarlyPlaceholder) {
+        start.push(placeholder);
     }
-    createPageHandles(pages, currentPage) {
-        const pagesLength = pages.length;
-        const interval = this.interval;
-        const placeholder = this.placeholder;
-        const handles = [];
-        // nav handle
-        if (currentPage > 1) {
-            handles.push('prev');
-        }
-        // MIDDLE
-        if (currentPage <= interval) {
-            // f.ex  [ 'prev', 1, 2, 3, 'next' ] or
-            // f.ex: [ 'prev', 1, 2, 3, '..', 8, 'next' ]
-            for (let index = 1; index <= pagesLength - 1; index++) {
-                handles.push(index);
-                if (index >= interval) {
-                    break;
-                }
-            }
-            if (pagesLength > interval) {
-                handles.push(placeholder);
-            }
-            // END
-            // last number
-            handles.push(pagesLength);
-        }
-        else {
-            handles.push(1, placeholder);
-            if (currentPage + interval > pagesLength) {
-                // f.ex: [ 'prev', 1, '..', 6, 7, 8, 'next' ]
-                for (let index = pagesLength - interval + 1; index <= pagesLength; index++) {
-                    handles.push(index);
-                }
-            }
-            else {
-                // f.ex: [ 'prev', 1, '..', 3, 4, 5, '..', 8, 'next' ]
-                for (let index = currentPage - 1; index <= currentPage + 1; index++) {
-                    handles.push(index);
-                }
-                handles.push(placeholder, pagesLength);
-            }
-        }
-        // nav handle
-        if (currentPage !== pagesLength) {
-            handles.push('next');
-        }
-        return handles;
+    // MIDDLE
+    // * SCENARIOS
+    // * f.ex: 1 -> [ 1, 2, 3, 'next' ]
+    // * f.ex: 1 or 2 or 3 -> [ 'prev', 1, 2, 3, 'next']
+    // * f.ex: 1 or 2 -> [ 'prev', 1, 2, 3, '..', 8, 'next' ]
+    // * f.ex: 3 -> [ 'prev', 1, 2, 3, 4, '..', 8, 'next' ]
+    // * f.ex: 7 -> [ 'prev', 1, '..', 6, 7, 8, '..', '12', 'next' ]
+    // * f.ex: 6 -> [ 'prev', 1, '..', 5, 6, 7, 8, 'next' ]
+    // * f.ex: 7 or 8 [ 'prev', 1, '..', 6, 7, 8, 'next' ]
+    if (context.length === 1) {
+        if (hasLatePlaceholder)
+            context.push(context[context.length - 1] + 1);
+        if (hasEarlyPlaceholder)
+            context.unshift(context[0] - 1);
     }
-    convertListToPages(list, itemsPerPage) {
-        const pages = { length: 0 };
-        let pageNr = 1;
-        let index = 1;
-        let length;
-        let listKeys;
-        if (typeof list === 'object' && !Array.isArray(list)) {
-            listKeys = Object.keys(list);
-            length = listKeys.length;
-        }
-        else {
-            length = list.length;
-        }
-        for (let listIndex = 0; listIndex < length; listIndex++) {
-            let item;
-            if (listKeys) {
-                item = list[listKeys[listIndex]];
-            }
-            else {
-                item = list[listIndex];
-            }
-            if (!pages[pageNr]) {
-                pages[pageNr] = [];
-            }
-            pages[pageNr].push(item);
-            if (index % itemsPerPage === 0) {
-                pageNr++;
-            }
-            index++;
-        }
-        pages.length = Object.keys(pages).filter((key) => key !== 'length').length;
-        return pages;
+    else {
+        if (hasLatePlaceholder && isEarlyEdge)
+            context.splice(-1, 1);
+        if (hasEarlyPlaceholder && isLateEdge)
+            context.splice(0, 1);
     }
+    middle.push(...context);
+    // END: nav handle
+    if (hasLatePlaceholder) {
+        end.push(placeholder);
+    }
+    end.push(pageCount);
+    if (currentPage !== pageCount || stableHandles) {
+        end.push('next');
+    }
+    return [...start, ...middle, ...end];
+}
+export function convertListToPages(list, itemsPerPage) {
+    const pages = [];
+    let page = [];
+    for (let index = 0; index < list.length; index++) {
+        const item = list[index];
+        const isLastItem = index === list.length - 1;
+        page.push(item);
+        if (page.length === itemsPerPage || (isLastItem && page.length > 0)) {
+            pages.push(page);
+            page = [];
+        }
+    }
+    return pages;
 }
 //# sourceMappingURL=index.js.map
