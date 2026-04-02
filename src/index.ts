@@ -1,4 +1,4 @@
-const DEFAULT_PLACEHOLDER = '..';
+const DEFAULT_PLACEHOLDER = "..";
 const DEFAULT_ITEMS_PER_PAGE = 2;
 
 export interface PagesifyOptions {
@@ -33,7 +33,11 @@ export interface PaginationResult<T> {
  *   paginate([1,2,3,4,5,6], 2, { itemsPerPage: 2 });
  *   // => { handles: ['prev',1,2,3,'next'], pages: [[1,2],[3,4],[5,6]] }
  */
-export function paginate<T>(items: T[], currentPage: number, options: PagesifyOptions = {}): PaginationResult<T> {
+export function paginate<T>(
+    items: T[],
+    currentPage: number,
+    options: PagesifyOptions = {},
+): PaginationResult<T> {
     const itemsPerPage = options.itemsPerPage || DEFAULT_ITEMS_PER_PAGE;
 
     const pages = convertListToPages(items, itemsPerPage);
@@ -66,10 +70,14 @@ export function paginate<T>(items: T[], currentPage: number, options: PagesifyOp
  * @param options - PagesifyOptions allowing customization of placeholder, navigation handles, and stabilization.
  * @returns An array containing navigation handles, page numbers, and placeholders.
  */
-export function createPageHandles(currentPage: number, pageCount: number, options: PagesifyOptions = {}): (string | number)[] {
+export function createPageHandles(
+    currentPage: number,
+    pageCount: number,
+    options: PagesifyOptions = {},
+): (string | number)[] {
     // If there's only one page, show it (add navigation if stableHandles is set)
     if (pageCount === 1) {
-        return options.stableHandles ? ['prev', 1, 'next'] : [1];
+        return options.stableHandles ? ["prev", 1, "next"] : [1];
     }
 
     const placeholder = options.placeholder || DEFAULT_PLACEHOLDER;
@@ -86,13 +94,13 @@ export function createPageHandles(currentPage: number, pageCount: number, option
     // Filter out invalid page numbers (outside first/last page)
     context = context.filter((n) => n > 1 && n < pageCount);
 
-    let start = [];
-    let middle = [];
-    let end = [];
+    const start = [];
+    const middle = [];
+    const end = [];
 
     // START: Add 'prev' if we're not on the first page
     if (currentPage > 1 || stableHandles) {
-        start.push('prev');
+        start.push("prev");
     }
 
     // Always add first page number
@@ -133,7 +141,7 @@ export function createPageHandles(currentPage: number, pageCount: number, option
 
     // Add 'next' handle if we're not on the last page or if stableHandles is required
     if (currentPage !== pageCount || stableHandles) {
-        end.push('next');
+        end.push("next");
     }
 
     return [...start, ...middle, ...end];
